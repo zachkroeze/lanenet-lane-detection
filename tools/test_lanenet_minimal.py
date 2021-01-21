@@ -3105,6 +3105,6 @@ if __name__ == '__main__':
     args = init_args()
     tools_dir = os.path.dirname(os.path.abspath(__file__))
     lanenet_dir = os.path.dirname(tools_dir)
-    image_path = ops.join(lanenet_dir, "data", "tusimple_test_image", "o.jpg")
+    image_path = ops.join(lanenet_dir, "data", "tusimple_test_image", "0.jpg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
     test_lanenet(image_path, weights_path)
