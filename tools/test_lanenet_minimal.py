@@ -3080,8 +3080,8 @@ def test_lanenet(image_path, weights_path):
 
         for i in range(CFG.MODEL.EMBEDDING_FEATS_DIMS):
             instance_seg_image[0][:, :, i] = minmax_scale(instance_seg_image[0][:, :, i])
-        embedding_image = np.array(instance_seg_image[0], np.uint8)
 
+        embedding_image = np.array(instance_seg_image[0], np.uint8)
         plt.figure('mask_image')
         plt.imshow(mask_image[:, :, (2, 1, 0)])
         plt.figure('src_image')
@@ -3092,6 +3092,10 @@ def test_lanenet(image_path, weights_path):
         plt.imshow(binary_seg_image[0] * 255, cmap='gray')
         plt.show()
 
+        cv2.imwrite("mask_image.png", mask_image)
+        cv2.imwrite("src_image.png", image_vis)
+        cv2.imwrite("instance_image.png", embedding_image)
+        cv2.imwrite("binary_image.png", binary_seg_image[0] * 255)
     sess.close()
 
     return
@@ -3105,6 +3109,6 @@ if __name__ == '__main__':
     args = init_args()
     tools_dir = os.path.dirname(os.path.abspath(__file__))
     lanenet_dir = os.path.dirname(tools_dir)
-    image_path = ops.join(lanenet_dir, "data", "tusimple_test_image", "0.jpg")
+    image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
     test_lanenet(image_path, weights_path)
