@@ -3103,6 +3103,8 @@ if __name__ == '__main__':
     """
     # init args
     args = init_args()
-    image_path = ops.join("/home", "zach", "Projects", "lanenet-lane-detection", "data", "custom_data", "image-001.jpeg")
-    weights_path = ops.join("/home", "zach", "Projects", "lanenet-lane-detection", "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
+    tools_dir = os.path.dirname(os.path.abspath(__file__))
+    lanenet_dir = os.path.dirname(tools_dir)
+    image_path = ops.join(lanenet_dir, "data", "tusimple_test_image", "o.jpg")
+    weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
     test_lanenet(image_path, weights_path)
