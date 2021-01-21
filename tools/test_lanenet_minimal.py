@@ -24,7 +24,8 @@ import cv2
 import glog as log
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior() 
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
