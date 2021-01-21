@@ -2,7 +2,7 @@ numpy
 tqdm
 glog
 easydict
-tensorflow_gpu
+tensorflow_gpu<2
 matplotlib
 scikit_learn
 loguru
