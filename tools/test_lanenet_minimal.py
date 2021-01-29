@@ -3101,6 +3101,47 @@ def test_lanenet(image_path, weights_path):
     return
 
 
+def write_frozen_graph(weights_path):
+    """
+
+    :param weights_path:
+    :return:
+    """
+
+    # Set sess configuration
+    sess_config = tf.ConfigProto()
+    sess_config.gpu_options.per_process_gpu_memory_fraction = CFG.GPU.GPU_MEMORY_FRACTION
+    sess_config.gpu_options.allow_growth = CFG.GPU.TF_ALLOW_GROWTH
+    sess_config.gpu_options.allocator_type = 'BFC'
+
+    sess = tf.Session(config=sess_config)
+
+    # define moving average version of the learned variables for eval
+    with tf.variable_scope(name_or_scope='moving_avg'):
+        variable_averages = tf.train.ExponentialMovingAverage(
+            CFG.SOLVER.MOVING_AVE_DECAY)
+        variables_to_restore = variable_averages.variables_to_restore()
+
+    # define saver
+    saver = tf.train.Saver(variables_to_restore)
+
+    with sess.as_default():
+        saver.restore(sess=sess, save_path=weights_path)
+
+        output_node_names = ['LaneNet/bisenetv2_frontend/binary_segmentation_branch/binary_logits',
+                             'LaneNet/bisenetv2_frontend/instance_segmentation_branch/instance_logits']  # Output nodes
+
+        # Freeze the graph
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(
+            sess,
+            sess.graph_def,
+            output_node_names)
+
+        # Save the frozen graph
+        with open('output_graph.pb', 'wb') as f:
+            f.write(frozen_graph_def.SerializeToString())
+
+
 if __name__ == '__main__':
     """
     test code
@@ -3111,4 +3152,5 @@ if __name__ == '__main__':
     lanenet_dir = os.path.dirname(tools_dir)
     image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
+    write_frozen_graph(weights_path)
     test_lanenet(image_path, weights_path)
