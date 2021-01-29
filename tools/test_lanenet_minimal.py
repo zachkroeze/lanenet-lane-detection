@@ -3101,12 +3101,29 @@ def test_lanenet(image_path, weights_path):
     return
 
 
-def write_frozen_graph(weights_path):
+def save_frozen_graph(image_path, weights_path):
     """
 
+    :param image_path:
     :param weights_path:
     :return:
     """
+    assert ops.exists(image_path), '{:s} not exist'.format(image_path)
+
+    LOG.info('Start reading image and preprocessing')
+    t_start = time.time()
+    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    image_vis = image
+    image = cv2.resize(image, (512, 256), interpolation=cv2.INTER_LINEAR)
+    image = image / 127.5 - 1.0
+    LOG.info('Image load complete, cost time: {:.5f}s'.format(time.time() - t_start))
+
+    input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
+
+    net = LaneNet(phase='test', cfg=CFG)
+    binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
+
+    postprocessor = LaneNetPostProcessor(cfg=CFG)
 
     # Set sess configuration
     sess_config = tf.ConfigProto()
@@ -3152,5 +3169,5 @@ if __name__ == '__main__':
     lanenet_dir = os.path.dirname(tools_dir)
     image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
-    write_frozen_graph(weights_path)
+    save_frozen_graph(weights_path)
     test_lanenet(image_path, weights_path)
