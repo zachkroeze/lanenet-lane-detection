@@ -3134,7 +3134,7 @@ def save_frozen_graph(image_path, weights_path):
     sess = tf.Session(config=sess_config)
 
     # define moving average version of the learned variables for eval
-    with tf.variable_scope(name_or_scope='moving_avg'):
+    with tf.variable_scope(name_or_scope='moving_avg', reuse=tf.AUTO_REUSE):
         variable_averages = tf.train.ExponentialMovingAverage(
             CFG.SOLVER.MOVING_AVE_DECAY)
         variables_to_restore = variable_averages.variables_to_restore()
@@ -3170,4 +3170,4 @@ if __name__ == '__main__':
     image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
     save_frozen_graph(image_path, weights_path)
-    test_lanenet(image_path, weights_path)
+    # test_lanenet(image_path, weights_path)
