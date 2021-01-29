@@ -3169,5 +3169,5 @@ if __name__ == '__main__':
     lanenet_dir = os.path.dirname(tools_dir)
     image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
-    save_frozen_graph(weights_path)
+    save_frozen_graph(image_path, weights_path)
     test_lanenet(image_path, weights_path)
