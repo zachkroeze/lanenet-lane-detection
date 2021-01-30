@@ -25,8 +25,10 @@ import glog as log
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+from tensorflow.python.compiler.tensorrt import trt_convert as trt
+
+# from sklearn.cluster import DBSCAN
+# from sklearn.preprocessing import StandardScaler
 
 
 class Config(dict):
@@ -3134,7 +3136,7 @@ def save_frozen_graph(image_path, weights_path):
     sess = tf.Session(config=sess_config)
 
     # define moving average version of the learned variables for eval
-    with tf.variable_scope(name_or_scope='moving_avg', reuse=tf.AUTO_REUSE):
+    with tf.variable_scope(name_or_scope='moving_avg'):
         variable_averages = tf.train.ExponentialMovingAverage(
             CFG.SOLVER.MOVING_AVE_DECAY)
         variables_to_restore = variable_averages.variables_to_restore()
@@ -3159,6 +3161,45 @@ def save_frozen_graph(image_path, weights_path):
             f.write(frozen_graph_def.SerializeToString())
 
 
+def tensor_rt_conversion(frozen_graph_path: str, image_path: str) -> None:
+    output_node_names = ['LaneNet/bisenetv2_frontend/binary_segmentation_branch/binary_logits',
+                         'LaneNet/bisenetv2_frontend/instance_segmentation_branch/instance_logits']  # Output nodes
+
+    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    image_vis = image
+    image = cv2.resize(image, (512, 256), interpolation=cv2.INTER_LINEAR)
+    image = image / 127.5 - 1.0
+
+    input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
+
+    with tf.Session() as sess:
+        # First deserialize your frozen graph:
+        with tf.gfile.GFile(frozen_graph_path, 'rb') as f:
+            frozen_graph = tf.GraphDef()
+            frozen_graph.ParseFromString(f.read())
+
+        # Now you can create a TensorRT inference graph from your
+        # frozen graph:
+        converter = trt.TrtGraphConverter(
+            input_graph_def=frozen_graph,
+            nodes_blacklist=output_node_names)  # output nodes
+        trt_graph = converter.convert()
+        # Import the TensorRT graph into a new graph and run:
+        output_node = tf.import_graph_def(
+            trt_graph,
+            return_elements=output_node_names)
+
+        tensor = tf.get_default_graph().get_tensor_by_name(name='input_tensor:0')
+        print("___________________________")
+        print("Tensor:", tensor)
+        print("Image:", image.shape)
+        print("___________________________")
+        binary_seg_image, instance_seg_image = sess.run(
+            output_node,
+            feed_dict={tensor: [image]}
+        )
+
+
 if __name__ == '__main__':
     """
     test code
@@ -3169,5 +3210,7 @@ if __name__ == '__main__':
     lanenet_dir = os.path.dirname(tools_dir)
     image_path = ops.join(lanenet_dir, "data", "custom_data", "image-001.jpeg")
     weights_path = ops.join(lanenet_dir, "model", "tusimple_lanenet", "tusimple_lanenet.ckpt")
-    save_frozen_graph(image_path, weights_path)
+    output_graph_path = os.path.join(lanenet_dir, "output_graph.pb")
+    # save_frozen_graph(image_path, weights_path)
     # test_lanenet(image_path, weights_path)
+    tensor_rt_conversion(output_graph_path, image_path)
